@@ -1,1 +1,25 @@
 # fpy_datareader
+
+## 統計データ取得
+
+```Python
+from fpy_datareader import estat
+
+appId = 'xxxxxxx'
+statsDataId = '0003109570'  # 例:完全生命表
+
+esr = estat.eStatReader(appId)
+esr.get_estat_StatsData_df(statsDataId)
+
+df = esr.data_value
+```
+
+## 取得できるデータのリストを確認
+
+```Python
+from fpy_datareader import estat
+
+appId = 'xxxxxxx'
+esr = estat.eStatReader(appId)
+esr.get_StatsList()  # 少し時間かかる
+```
