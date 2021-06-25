@@ -1,5 +1,11 @@
 # fpy_datareader
 
+## 政府統計の総合窓口（e-Stat）のAPI3.0版でデータ取得するPythonコード
+
+- 政府統計の総合窓口（e-Stat）のAPI3.0版の仕様
+
+https://www.e-stat.go.jp/api/api-info/e-stat-manual3-0
+
 ## 統計データ取得
 
 ```Python
