@@ -6,6 +6,11 @@
 
 https://www.e-stat.go.jp/api/api-info/e-stat-manual3-0
 
+## インストール
+```
+pip install fpy_datareader
+```
+
 ## 統計データ取得
 
 ```Python
