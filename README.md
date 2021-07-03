@@ -7,12 +7,13 @@
 https://www.e-stat.go.jp/api/api-info/e-stat-manual3-0
 
 ## インストール
+ターミナル等で以下を実行
 ```
 pip install fpy_datareader
 ```
 
 ## 統計データ取得
-
+Pythonで以下を実行
 ```Python
 from fpy_datareader import estat
 
