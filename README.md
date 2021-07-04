@@ -38,3 +38,4 @@ esr.get_StatsList()  # 少し時間かかる
 
 ## クレジット
 このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。
+https://www.e-stat.go.jp/api/api-info/credit
