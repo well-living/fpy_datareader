@@ -379,61 +379,61 @@ class eStatReader:
         }
         # 絞り込み条件
         # 表章事項
-        if type(lvTab) == int:  # 階層level Table
+        if (type(lvTab) == int) | (type(lvTab) == str):  # 階層level Table
             params.update({'lvTab': lvTab})
-        if type(cdTab) == int:  # コードcode Table
+        if (type(cdTab) == int) | (type(cdTab) == str):  # コードcode Table
             params.update({'cdTab': cdTab})
-        if type(cdTabFrom) == int:
+        if (type(cdTabFrom) == int) | (type(cdTabFrom) == str):
             params.update({'cdTabFrom': cdTabFrom})
-        if type(cdTabTo) == int:
+        if (type(cdTabTo) == int) | (type(cdTabTo) == str):
             params.update({'cdTabTo': cdTabTo})
         # 時間軸事項
-        if type(lvTime) == int:  # 階層level
+        if (type(lvTime) == int) | (type(lvTime) == str):  # 階層level
             params.update({'lvTime': lvTime})
-        if type(cdTime) == int:  # コードcode
+        if (type(cdTime) == int) | (type(cdTime) == str):  # コードcode
             params.update({'cdTime': cdTime})
-        if type(cdTimeFrom) == int:
+        if (type(cdTimeFrom) == int) | (type(cdTimeFrom) == str):
             params.update({'cdTimeFrom': cdTimeFrom})
-        if type(cdTimeTo) == int:
+        if (type(cdTimeTo) == int) | (type(cdTimeTo) == str):
             params.update({'cdTimeTo': cdTimeTo})
         # 地域事項
-        if type(lvArea) == int:  # 階層level
+        if (type(lvArea) == int) | (type(lvArea) == str):  # 階層level
             params.update({'lvArea': lvArea})
-        if type(cdArea) == int:  # コードcode
+        if (type(cdArea) == int) | (type(cdArea) == str):  # コードcode
             params.update({'cdArea': cdArea})
-        if type(cdAreaFrom) == int:
+        if (type(cdAreaFrom) == int) | (type(cdAreaFrom) == str):
             params.update({'cdAreaFrom': cdAreaFrom})
-        if type(cdAreaTo) == int:
+        if (type(cdAreaTo) == int) | (type(cdAreaTo) == str):
             params.update({'cdAreaTo': cdAreaTo})
         # 分類事項1
-        if type(lvCat01) == int:  # 階層level Category
+        if (type(lvCat01) == int) | (type(lvCat01) == str):  # 階層level Category
             params.update({'lvCat01': lvCat01})
-        if type(cdCat01) == int:  # コードcode Category
+        if (type(cdCat01) == int) | (type(cdCat01) == str):  # コードcode Category
             params.update({'cdCat01': cdCat01})
-        if type(cdCat01From) == int:
+        if (type(cdCat01From) == int) | (type(cdCat01From) == str):
             params.update({'cdCat01From': cdCat01From})
-        if type(cdCat01To) == int:
+        if (type(cdCat01To) == int) | (type(cdCat01To) == str):
             params.update({'cdCat01To': cdCat01To})
         # 分類事項2
-        if type(lvCat02) == int:  # 階層level Category
+        if (type(lvCat02) == int) | (type(lvCat02) == str):  # 階層level Category
             params.update({'lvCat02': lvCat02})
-        if type(cdCat02) == int:  # コードcode Category
+        if (type(cdCat02) == int) | (type(cdCat02) == str):  # コードcode Category
             params.update({'cdCat02': cdCat02})
-        if type(cdCat02From) == int:
+        if (type(cdCat02From) == int) | (type(cdCat02From) == str):
             params.update({'cdCat02From': cdCat02From})
-        if type(cdCat02To) == int:
+        if (type(cdCat02To) == int) | (type(cdCat02To) == str):
             params.update({'cdCat02To': cdCat02To})
         # 分類事項3
-        if type(lvCat03) == int:  # 階層level Category
+        if (type(lvCat03) == int) | (type(lvCat03) == str):  # 階層level Category
             params.update({'lvCat03': lvCat03})
-        if type(cdCat03) == int:  # コードcode Category
+        if (type(cdCat03) == int) | (type(cdCat03) == str):  # コードcode Category
             params.update({'cdCat03': cdCat03})
-        if type(cdCat03From) == int:
+        if (type(cdCat03From) == int) | (type(cdCat03From) == str):
             params.update({'cdCat03From': cdCat03From})
-        if type(cdCat03To) == int:
+        if (type(cdCat03To) == int) | (type(cdCat03To) == str):
             params.update({'cdCat03To': cdCat03To})
         # データ取得開始位置
-        if type(startPosition) == int:
+        if (type(startPosition) == int) | (type(startPosition) == str):
             params.update({'startPosition': startPosition})
         # メタ情報有無
         if (metaGetFlg == 'Y') or (metaGetFlg == 'N'):
@@ -620,4 +620,24 @@ class eStatReader:
         self.data_value = pd.concat(df_lt, axis=0)
         return self
 
-
+#%%
+    ## データが10万件を超える場合の一括処理
+    def get_estat_StatsData_df_unlimitArea(self, statsDataId):
+        """
+        年で2020年から1985年までで分割する。
+        """
+        self.get_estat_StatsData(statsDataId)
+        TOTAL_NUMBER = self.json['GET_STATS_DATA']['STATISTICAL_DATA']['RESULT_INF']['TOTAL_NUMBER']
+        df_lt = []
+        if TOTAL_NUMBER > 100000:
+            for ca in [('0' + str(i) + '000')[-5:] for i in range(48)]:
+                try:
+                    self.get_estat_StatsData_df(statsDataId, cdArea=ca)  # cdTimeTo未満
+                    if self.STATUS == 0:
+                        df_lt += [self.data_value]
+                        time.sleep(1)
+                except:
+                    pass
+    
+        self.data_value = pd.concat(df_lt, axis=0)
+        return self
