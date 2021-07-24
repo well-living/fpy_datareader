@@ -620,4 +620,24 @@ class eStatReader:
         self.data_value = pd.concat(df_lt, axis=0)
         return self
 
-
+#%%
+    ## データが10万件を超える場合の一括処理
+    def get_estat_StatsData_df_unlimitArea(self, statsDataId):
+        """
+        年で2020年から1985年までで分割する。
+        """
+        self.get_estat_StatsData(statsDataId)
+        TOTAL_NUMBER = self.json['GET_STATS_DATA']['STATISTICAL_DATA']['RESULT_INF']['TOTAL_NUMBER']
+        df_lt = []
+        if TOTAL_NUMBER > 100000:
+            for ca in [('0' + str(i) + '000')[-5:] for i in range(48)]:
+                try:
+                    self.get_estat_StatsData_df(statsDataId, cdArea=ca)  # cdTimeTo未満
+                    if self.STATUS == 0:
+                        df_lt += [self.data_value]
+                        time.sleep(1)
+                except:
+                    pass
+    
+        self.data_value = pd.concat(df_lt, axis=0)
+        return self
