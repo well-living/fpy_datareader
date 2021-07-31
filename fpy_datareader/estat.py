@@ -641,3 +641,25 @@ class eStatReader:
     
         self.data_value = pd.concat(df_lt, axis=0)
         return self
+
+#%%
+    def tab_pivot(self):
+        self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目'] + '(' + self.data_value['unit'].fillna('') + ')' + self.data_value['level_tab_表章項目']
+        self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目_unit_level'].str.replace('()', '', regex=False)
+        self.data_value = self.data_value.drop(['tab', 'name_tab_表章項目', 'code_name_tab_表章項目', 'unit', 'level_tab_表章項目'], axis=1)
+        cols_lst = list(self.data_value.columns)
+        cols_lst.remove('$')
+        df_tab = self.data_value.set_index(cols_lst).unstack()
+        df_tab.columns = [j for i, j in df_tab.columns]
+        for c in df_tab:
+            try:
+                df_tab[c] = df_tab[c].astype(int)
+                print(c, 'をint型に変換しました')
+            except:
+                try:
+                    df_tab[c] = df_tab[c].astype(float)
+                    print(c, 'をfloat型に変換しました')
+                except:
+                    print(c, 'はint,floatに変換できません')
+        self.data_value = df_tab.reset_index()
+        return self
