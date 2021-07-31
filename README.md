@@ -22,6 +22,7 @@ statsDataId = '0003109570'  # 例:完全生命表
 
 esr = estat.eStatReader(appId)
 esr.get_estat_StatsData_df(statsDataId)
+esr.tab_pivot()
 
 df = esr.data_value
 ```
