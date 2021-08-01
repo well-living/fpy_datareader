@@ -523,7 +523,7 @@ class eStatReader:
         if self.data_value.shape[0] == 100000:
             print('行数が100000行です。すべてのデータを取得できていない可能性があります。')
         self.data_value.columns = [col.replace('@', '') for col in self.data_value.columns]
-        cond = (self.data_value['$']=='-') | (self.data_value['$']=='…')
+        cond = (self.data_value['$']=='-') | (self.data_value['$']=='…') | (self.data_value['$']=='･･･')
         self.data_value['$'] = self.data_value['$'].mask(cond, np.nan)
         
         # コードをキーとしてマスタテーブルと結合
