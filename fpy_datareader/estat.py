@@ -506,7 +506,7 @@ class eStatReader:
     
 #%%
     # 属性マスタと結合しDataFrame形式に変換
-    def estat_json_to_df(self):
+    def estat_json_to_df(self, fillna='NULL'):
         """
         Parameters
         ----------
@@ -523,8 +523,8 @@ class eStatReader:
         if self.data_value.shape[0] == 100000:
             print('行数が100000行です。すべてのデータを取得できていない可能性があります。')
         self.data_value.columns = [col.replace('@', '') for col in self.data_value.columns]
-        cond = (self.data_value['$']=='-') | (self.data_value['$']=='…') | (self.data_value['$']=='･･･')
-        self.data_value['$'] = self.data_value['$'].mask(cond, np.nan)
+        cond = (self.data_value['$']=='-') | (self.data_value['$']=='…') | (self.data_value['$']=='･･･') | (self.data_value['$']=='X')
+        self.data_value['$'] = self.data_value['$'].mask(cond, fillna)
         
         # コードをキーとしてマスタテーブルと結合
         lst = self.json['GET_STATS_DATA']['STATISTICAL_DATA']['CLASS_INF']['CLASS_OBJ']        
@@ -532,12 +532,14 @@ class eStatReader:
             if type(dct['CLASS']) == list:
                 tmp_df = pd.DataFrame(dct['CLASS'])[['@code', '@name', '@level']]
                 tmp_df.columns = [col.replace('@', '')+'_'+dct['@id']+'_'+dct['@name'] for col in tmp_df.columns]
+                tmp_df = tmp_df.rename(columns={'name_'+dct['@id']+'_'+dct['@name']: dct['@name']})
             else:
                 tmp_S = pd.Series(dct['CLASS'])[['@code', '@name']]
-                tmp_S.index = [idx.replace('@', '')+'_'+dct['@id']+'_'+dct['@name'] for idx in tmp_S.index]
+                tmp_S.index = ['code_'+dct['@id']+'_'+dct['@name'], dct['@name']]
+                #tmp_S.index = [idx.replace('@', '')+'_'+dct['@id']+'_'+dct['@name'] for idx in tmp_S.index]
                 tmp_df = pd.DataFrame(tmp_S).T
             self.data_value = self.data_value.merge(tmp_df, left_on=dct['@id'], right_on='code_'+dct['@id']+'_'+dct['@name'], how='left')
-            self.data_value['code_name_'+dct['@id']+'_'+dct['@name']] = self.data_value['code_'+dct['@id']+'_'+dct['@name']] + '_' + self.data_value['name_'+dct['@id']+'_'+dct['@name']]
+            self.data_value['code_name_'+dct['@id']+'_'+dct['@name']] = self.data_value['code_'+dct['@id']+'_'+dct['@name']] + '_' + self.data_value[dct['@name']]
             self.data_value = self.data_value.drop('code_'+dct['@id']+'_'+dct['@name'], axis=1)
         return self
 
@@ -643,23 +645,24 @@ class eStatReader:
         return self
 
 #%%
-    def tab_pivot(self):
+    def tab_pivot(self, to_numeric=False):
         self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目'] + '(' + self.data_value['unit'].fillna('') + ')' + self.data_value['level_tab_表章項目']
         self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目_unit_level'].str.replace('()', '', regex=False)
-        self.data_value = self.data_value.drop(['tab', 'name_tab_表章項目', 'code_name_tab_表章項目', 'unit', 'level_tab_表章項目'], axis=1)
+        self.data_value = self.data_value.drop(['tab', '表章項目', 'code_name_tab_表章項目', 'unit', 'level_tab_表章項目'], axis=1)
         cols_lst = list(self.data_value.columns)
         cols_lst.remove('$')
         df_tab = self.data_value.set_index(cols_lst).unstack()
         df_tab.columns = [j for i, j in df_tab.columns]
-        for c in df_tab:
-            try:
-                df_tab[c] = df_tab[c].astype(int)
-                print(c, 'をint型に変換しました')
-            except:
+        if to_numeric:
+            for c in df_tab:
                 try:
-                    df_tab[c] = df_tab[c].astype(float)
-                    print(c, 'をfloat型に変換しました')
+                    df_tab[c] = df_tab[c].astype(int)
+                    print(c, 'をint型に変換しました')
                 except:
-                    print(c, 'はint,floatに変換できません')
+                    try:
+                        df_tab[c] = df_tab[c].astype(float)
+                        print(c, 'をfloat型に変換しました')
+                    except:
+                        print(c, 'はint,floatに変換できません')
         self.data_value = df_tab.reset_index()
         return self
