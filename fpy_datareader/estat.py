@@ -200,58 +200,6 @@ class eStatReader:
         return TABLE_INF, STATUS, DATE, NUMBER, RESULT_INF
 
 #%%
-    # e-Statのメタ情報取得
-    def get_estat_MetaInfo(self, statsDataId):
-        """
-        メタ情報取得
-        
-        Parameters
-        ----------
-        statsDataId : string
-            「統計表情報取得」で得られる統計表IDを指定.
-    
-        Returns
-        -------
-        TABLE_INF : dict
-            指定した統計表の情報を出力します。属性として統計表ID(id)を保持.
-            
-        CLASS_INF : dict
-            統計データのメタ情報を出力.  
-            
-        STATUS : int
-            0～2の場合は正常終了、100以上の場合はエラー.
-            ['GET_META_INFO']['RESULT']['STATUS'] 
-            
-        DATE : date
-            このJSONデータが出力された日時.
-            ['GET_META_INFO']['RESULT']['DATE'] 
-        
-        Reference
-        -------
-        出力しない項目
-        ['GET_META_INFO']['RESULT']['ERROR_MSG'] : STATUSの値に対応するエラーメッセージです。
-        ['GET_META_INFO']['PARAMETER']['LANG'] : 言語
-        ['GET_META_INFO']['PARAMETER']['STATS_DATA_ID'] : statsDataId
-        ['GET_META_INFO']['PARAMETER']['DATA_FORMAT'] : 出力フォーマット形式「X」：XML形式「J」：JSON形式又はJSONP形式
-    
-        """
-        request_url_str = "https://api.e-stat.go.jp/rest/%s/app/json/getMetaInfo?" % str(self.version)
-        params = {
-            "appId": self.appId,
-            "statsDataId": statsDataId
-        }
-        params_str = urllib.parse.urlencode(query=params)  # urllib
-        request_url_str += params_str
-        MetaInfo = requests.get(request_url_str).json()
-        
-        TABLE_INF = MetaInfo['GET_META_INFO']['METADATA_INF']['TABLE_INF']
-        CLASS_INF = MetaInfo['GET_META_INFO']['METADATA_INF']['CLASS_INF']
-        STATUS = MetaInfo['GET_META_INFO']['RESULT']['STATUS']
-        DATE = MetaInfo['GET_META_INFO']['RESULT']['DATE']
-    
-        return TABLE_INF, CLASS_INF, STATUS, DATE
-
-#%%
     # e-Statのデータカタログ取得
     def get_estat_DataCatalog(self, limit=100):
         """
@@ -337,6 +285,60 @@ class eStatReader:
         DATASET = pd.concat(DATASET, axis=0)
     
         return DATASET, CATAROG_id, STATUS, DATE, NUMBER, RESULT_INF
+
+#%%
+    # e-Statのメタ情報取得
+    def get_estat_MetaInfo(self, statsDataId):
+        """
+        メタ情報取得
+        
+        Parameters
+        ----------
+        statsDataId : string
+            「統計表情報取得」で得られる統計表IDを指定.
+    
+        Returns
+        -------
+        TABLE_INF : dict
+            指定した統計表の情報を出力します。属性として統計表ID(id)を保持.
+            
+        CLASS_INF : dict
+            統計データのメタ情報を出力.  
+            
+        STATUS : int
+            0～2の場合は正常終了、100以上の場合はエラー.
+            ['GET_META_INFO']['RESULT']['STATUS'] 
+            
+        DATE : date
+            このJSONデータが出力された日時.
+            ['GET_META_INFO']['RESULT']['DATE'] 
+        
+        Reference
+        -------
+        出力しない項目
+        ['GET_META_INFO']['RESULT']['ERROR_MSG'] : STATUSの値に対応するエラーメッセージです。
+        ['GET_META_INFO']['PARAMETER']['LANG'] : 言語
+        ['GET_META_INFO']['PARAMETER']['STATS_DATA_ID'] : statsDataId
+        ['GET_META_INFO']['PARAMETER']['DATA_FORMAT'] : 出力フォーマット形式「X」：XML形式「J」：JSON形式又はJSONP形式
+    
+        """
+        request_url_str = "https://api.e-stat.go.jp/rest/%s/app/json/getMetaInfo?" % str(self.version)
+        params = {
+            "appId": self.appId,
+            "statsDataId": statsDataId
+        }
+        params_str = urllib.parse.urlencode(query=params)  # urllib
+        request_url_str += params_str
+        MetaInfo = requests.get(request_url_str).json()
+        
+        TABLE_INF = MetaInfo['GET_META_INFO']['METADATA_INF']['TABLE_INF']
+        CLASS_INF = MetaInfo['GET_META_INFO']['METADATA_INF']['CLASS_INF']
+        STATUS = MetaInfo['GET_META_INFO']['RESULT']['STATUS']
+        DATE = MetaInfo['GET_META_INFO']['RESULT']['DATE']
+    
+        return TABLE_INF, CLASS_INF, STATUS, DATE
+
+
 
 
 #%%
@@ -646,9 +648,13 @@ class eStatReader:
 
 #%%
     def tab_pivot(self, to_numeric=False):
-        self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目'] + '(' + self.data_value['unit'].fillna('') + ')' + self.data_value['level_tab_表章項目']
+        self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目'] + '(' + self.data_value['unit'].fillna('') + ')'
+        if 'level_tab_表章項目' in self.data_value.columns:
+            self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目_unit_level'] + self.data_value['level_tab_表章項目']
         self.data_value['code_name_tab_表章項目_unit_level'] = self.data_value['code_name_tab_表章項目_unit_level'].str.replace('()', '', regex=False)
-        self.data_value = self.data_value.drop(['tab', '表章項目', 'code_name_tab_表章項目', 'unit', 'level_tab_表章項目'], axis=1)
+        self.data_value = self.data_value.drop(['tab', '表章項目', 'code_name_tab_表章項目', 'unit'], axis=1)
+        if 'level_tab_表章項目' in self.data_value.columns:
+            self.data_value = self.data_value.drop('level_tab_表章項目', axis=1)
         cols_lst = list(self.data_value.columns)
         cols_lst.remove('$')
         df_tab = self.data_value.set_index(cols_lst).unstack()
